@@ -1,30 +1,44 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:lost_and_found_bd/main.dart';
+import 'package:lost_and_found_bd/models/user_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const LostFoundApp());
+  group('UserModel Unit Tests', () {
+    test('UserModel converts to and from Map correctly', () {
+      const user = UserModel(
+        uid: '12345',
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+8801700000000',
+        role: 'user',
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      final map = user.toMap();
+      expect(map['uid'], '12345');
+      expect(map['name'], 'John Doe');
+      expect(map['fullName'], 'John Doe');
+      expect(map['email'], 'john@example.com');
+      expect(map['phone'], '+8801700000000');
+      expect(map['role'], 'user');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      final deserializedUser = UserModel.fromMap(map);
+      expect(deserializedUser.uid, user.uid);
+      expect(deserializedUser.name, user.name);
+      expect(deserializedUser.email, user.email);
+      expect(deserializedUser.phone, user.phone);
+      expect(deserializedUser.role, user.role);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('UserModel handles fallback from fullName if name is missing', () {
+      final map = {
+        'uid': '67890',
+        'fullName': 'Alice Smith',
+        'email': 'alice@example.com',
+      };
+
+      final user = UserModel.fromMap(map);
+      expect(user.uid, '67890');
+      expect(user.name, 'Alice Smith');
+      expect(user.role, 'user');
+    });
   });
 }

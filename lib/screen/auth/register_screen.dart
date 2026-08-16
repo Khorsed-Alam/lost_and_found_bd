@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/user_model.dart';
@@ -68,6 +69,8 @@ class _RegisterScreenState
       if (mounted) {
         Navigator.pop(context);
       }
+    } on FirebaseAuthException catch (e) {
+      showMessage(e.message ?? 'Registration failed.');
     } catch (e) {
       showMessage('Registration failed: $e');
     }

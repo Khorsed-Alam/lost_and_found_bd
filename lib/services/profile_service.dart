@@ -77,6 +77,7 @@ class ProfileService {
       'uid': user.uid,
       'username': username.trim(),
       'fullName': fullName.trim(),
+      'name': fullName.trim(),
       'email': user.email ?? '',
       'phone': phone.trim(),
       'role': 'user',
@@ -141,6 +142,7 @@ class ProfileService {
         'uid': user.uid,
         'username': cleanUsername,
         'fullName': cleanFullName,
+        'name': cleanFullName,
         'email': user.email ?? '',
         'phone': cleanPhone,
         'updatedAt':

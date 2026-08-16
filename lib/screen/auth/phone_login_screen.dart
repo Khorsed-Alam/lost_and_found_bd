@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_services.dart';
 import 'otp_screen.dart';
 
 class PhoneLoginScreen extends StatefulWidget {
@@ -139,10 +141,25 @@ class _PhoneLoginScreenState
             PhoneAuthCredential credential,
             ) async {
           try {
-            await FirebaseAuth.instance
+            final userCredential = await FirebaseAuth.instance
                 .signInWithCredential(
               credential,
             );
+
+            if (userCredential.user != null) {
+              final userService = UserService();
+              final profile = await userService.getUserProfile(userCredential.user!.uid);
+              if (profile == null) {
+                await userService.createUserProfile(
+                  UserModel(
+                    uid: userCredential.user!.uid,
+                    name: 'User',
+                    email: '',
+                    phone: phone,
+                  ),
+                );
+              }
+            }
 
             if (!mounted) return;
 

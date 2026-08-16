@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_services.dart';
 
 class OTPScreen extends StatefulWidget {
   final String verificationId;
@@ -60,11 +62,26 @@ class _OTPScreenState
     });
 
     try {
-      await authService.verifyOTP(
+      final credential = await authService.verifyOTP(
         verificationId:
         widget.verificationId,
         smsCode: otp,
       );
+
+      if (credential.user != null) {
+        final userService = UserService();
+        final profile = await userService.getUserProfile(credential.user!.uid);
+        if (profile == null) {
+          await userService.createUserProfile(
+            UserModel(
+              uid: credential.user!.uid,
+              name: 'User',
+              email: '',
+              phone: widget.phoneNumber,
+            ),
+          );
+        }
+      }
 
       if (!mounted) return;
 

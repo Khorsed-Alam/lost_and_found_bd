@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -178,7 +179,40 @@ class AuthService {
       credential,
     );
   }
+// =========================================================
+// DELETE USER PROFILE
+// =========================================================
 
+  Future<void> deleteUserProfile() async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No user is currently logged in.');
+    }
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .delete();
+  }
+
+// =========================================================
+// DELETE FIREBASE ACCOUNT
+// =========================================================
+
+  Future<void> deleteAccount() async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No user is currently logged in.');
+    }
+
+    // First delete Firestore data
+    await deleteUserProfile();
+
+    // Then delete Firebase Auth account
+    await user.delete();
+  }
   // =========================================================
   // LOGOUT
   // =========================================================

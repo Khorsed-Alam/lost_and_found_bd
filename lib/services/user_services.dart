@@ -13,7 +13,12 @@ class UserService {
         .collection('users')
         .doc(user.uid)
         .set(
-      user.toMap(),
+      {
+        ...user.toMap(),
+        'fullName': user.name,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
       SetOptions(merge: true),
     );
   }

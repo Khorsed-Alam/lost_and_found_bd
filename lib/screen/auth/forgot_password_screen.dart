@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
@@ -35,6 +36,10 @@ class _ForgotPasswordScreenState
 
       showMessage(
         'Password reset email sent. Check your inbox.',
+      );
+    } on FirebaseAuthException catch (e) {
+      showMessage(
+        e.message ?? 'Could not send reset email.',
       );
     } catch (e) {
       showMessage(

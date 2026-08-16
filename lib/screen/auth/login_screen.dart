@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/user_model.dart';
@@ -39,6 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
         email: emailController.text,
         password: passwordController.text,
       );
+    } on FirebaseAuthException catch (e) {
+      showMessage(e.message ?? 'Login failed.');
     } catch (e) {
       showMessage('Login failed: $e');
     }
@@ -68,6 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
+    } on FirebaseAuthException catch (e) {
+      showMessage(e.message ?? 'Google login failed.');
     } catch (e) {
       showMessage('Google login failed: $e');
     }

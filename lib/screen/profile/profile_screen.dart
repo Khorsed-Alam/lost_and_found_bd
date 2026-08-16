@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -21,6 +23,9 @@ class _ProfileScreenState
 
   final ProfileService _profileService =
   ProfileService();
+
+  final AuthService _authService =
+  AuthService();
 
   // =========================================================
   // CONTROLLERS
@@ -102,6 +107,8 @@ class _ProfileScreenState
 
         _fullNameController.text =
             data?['fullName']
+                ?.toString() ??
+                data?['name']
                 ?.toString() ??
                 user.displayName ??
                 '';
@@ -245,6 +252,101 @@ class _ProfileScreenState
     setState(() {
       _editing = true;
     });
+  }
+
+  // =========================================================
+  // DELETE PROFILE
+  // =========================================================
+
+  Future<void> _deleteProfile() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Profile'),
+          content: const Text(
+            'Are you sure you want to delete your profile information?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _authService.deleteUserProfile();
+      if (!mounted) return;
+      _showMessage('Profile data deleted.');
+      await _loadProfile(); // Refresh UI
+    } catch (e) {
+      _showMessage('Failed to delete profile: $e');
+    }
+  }
+
+  // =========================================================
+  // DELETE ACCOUNT
+  // =========================================================
+
+  Future<void> _deleteAccount() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Account'),
+          content: const Text(
+            'Are you sure you want to permanently delete your account?\n\nThis action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete Permanently', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _authService.deleteAccount();
+      if (!mounted) return;
+
+      // Navigate back to login or root (AuthGate handles it)
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        _showMessage('Please login again before deleting your account.');
+      } else {
+        _showMessage(e.message ?? 'Failed to delete account.');
+      }
+    } catch (e) {
+      _showMessage('Failed to delete account: $e');
+    }
+  }
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
+
+  Future<void> _logout() async {
+    await _authService.logout();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   // =========================================================
@@ -624,6 +726,30 @@ class _ProfileScreenState
                   'CANCEL',
                 ),
               ),
+            ),
+          ],
+
+          if (!_editing) ...[
+            const Divider(height: 40),
+
+            ListTile(
+              leading: const Icon(Icons.person_remove, color: Colors.orange),
+              title: const Text('Delete Profile Data'),
+              subtitle: const Text('Remove Firestore information'),
+              onTap: _deleteProfile,
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: const Text('Delete Account'),
+              subtitle: const Text('Permanently remove your account'),
+              onTap: _deleteAccount,
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: _logout,
             ),
           ],
         ],
