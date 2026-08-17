@@ -5,7 +5,6 @@ import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_services.dart';
 import 'forgot_password_screen.dart';
-import 'phone_login_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -179,23 +178,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     label:
                     const Text('Continue with Google'),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                          const PhoneLoginScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.phone),
-                    label:
-                    const Text('Login with Phone'),
                   ),
 
                   const SizedBox(height: 20),

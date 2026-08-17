@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "669507956172-je2mqigcfldn2fn8u0g3ki1vrsg66pc4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lost_and_found_bd",
+            "certificate_hash": "5146df0d8ddb4e47bba04eb9906386cbe976f31d"
+          }
+        },
+        {
           "client_id": "669507956172-rcemi5e7bvmnu5a0spefmqt1prvrbjg2.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "669507956172-rcemi5e7bvmnu5a0spefmqt1prvrbjg2.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "669507956172-mf9q0prh287iqe7e86rc7kr0d7erdk3e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lostAndFoundBd"
+              }
             }
           ]
         }

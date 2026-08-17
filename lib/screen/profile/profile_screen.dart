@@ -1,11 +1,9 @@
 import 'dart:typed_data';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/supabase_services.dart';
-import '../dashboard/my_posts_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -39,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final user = _profileService.currentUser;
+      final user = _authService.currentUser;
       if (user == null) {
         throw Exception('User is not logged in.');
       }
@@ -88,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAndUploadPhoto(ImageSource source) async {
-    final user = _profileService.currentUser;
+    final user = _authService.currentUser;
     if (user == null) return;
 
     try {
@@ -105,14 +103,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final Uint8List bytes = await file.readAsBytes();
       final String ext = file.name.split('.').last;
 
-      // Upload to Supabase Storage profiles folder
       final String publicUrl = await _supabaseService.uploadProfileAvatar(
         uid: user.uid,
         bytes: bytes,
         extension: ext,
       );
 
-      // Save to Firestore and Firebase Auth
       await _profileService.updateProfilePhoto(publicUrl);
 
       if (!mounted) return;
@@ -243,82 +239,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _deleteProfile() async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Profile Data'),
-          content: const Text(
-            'Are you sure you want to delete your profile information from Firestore?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await _authService.deleteUserProfile();
-      if (!mounted) return;
-      _showMessage('Profile data deleted.');
-      await _loadProfile();
-    } catch (e) {
-      _showMessage('Failed to delete profile: $e');
-    }
-  }
-
-  Future<void> _deleteAccount() async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Account'),
-          content: const Text(
-            'Are you sure you want to permanently delete your account?\n\nThis action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Delete Permanently',
-                  style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await _authService.deleteAccount();
-      if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        _showMessage('Please login again before deleting your account.');
-      } else {
-        _showMessage(e.message ?? 'Failed to delete account.');
-      }
-    } catch (e) {
-      _showMessage('Failed to delete account: $e');
-    }
-  }
-
   Future<void> _logout() async {
     await _authService.logout();
     if (!mounted) return;
@@ -385,7 +305,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Stack(
             alignment: Alignment.center,
             children: [
-              // Avatar
               Container(
                 width: 104,
                 height: 104,
@@ -419,13 +338,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                 ),
               ),
-
-              // Uploading spinner overlay
               if (_uploadingPhoto)
                 Container(
                   width: 104,
                   height: 104,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.black45,
                     shape: BoxShape.circle,
                   ),
@@ -436,8 +353,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-
-              // Camera Icon Button
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -538,7 +453,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 24),
 
-          // EDIT / SAVE BUTTONS
           if (_editing) ...[
             SizedBox(
               width: double.infinity,
@@ -583,48 +497,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           if (!_editing) ...[
             const Divider(height: 32),
-
-            // My Reported Items shortcut
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFEEF2FF),
-                child: Icon(Icons.list_alt_rounded, color: Colors.indigo),
-              ),
-              title: const Text('My Reported Items', style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('View and manage your lost & found posts'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MyPostsScreen()),
-                );
-              },
-            ),
-
-            const Divider(height: 24),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: Colors.orange.shade50,
-                child: const Icon(Icons.person_remove_outlined, color: Colors.orange),
-              ),
-              title: const Text('Clear Profile Information'),
-              subtitle: const Text('Delete your Firestore info'),
-              onTap: _deleteProfile,
-            ),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: Colors.red.shade50,
-                child: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-              ),
-              title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
-              subtitle: const Text('Permanently remove your account'),
-              onTap: _deleteAccount,
-            ),
 
             ListTile(
               contentPadding: EdgeInsets.zero,

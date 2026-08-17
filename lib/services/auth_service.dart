@@ -1,12 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Google Sign In
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // Google Sign In (lazy initialization for cross-platform stability)
+  GoogleSignIn? _googleSignInInstance;
+  GoogleSignIn get _googleSignIn => _googleSignInInstance ??= GoogleSignIn(
+    // The Web Client ID from google-services.json (client_type: 3)
+    // This is required to prevent ApiException 10 on Android.
+    serverClientId: '669507956172-rcemi5e7bvmnu5a0spefmqt1prvrbjg2.apps.googleusercontent.com',
+  );
 
   // =========================================================
   // CURRENT USER
@@ -116,110 +120,12 @@ class AuthService {
   }
 
   // =========================================================
-  // SEND PHONE OTP
-  // =========================================================
-
-  Future<void> sendPhoneOTP({
-    required String phoneNumber,
-
-    required void Function(
-        String verificationId,
-        ) onCodeSent,
-
-    required void Function(
-        FirebaseAuthException error,
-        ) onVerificationFailed,
-
-    required void Function(
-        PhoneAuthCredential credential,
-        ) onVerificationCompleted,
-
-    required void Function(
-        String verificationId,
-        ) onCodeAutoRetrievalTimeout,
-  }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-
-      verificationCompleted:
-      onVerificationCompleted,
-
-      verificationFailed:
-      onVerificationFailed,
-
-      codeSent: (
-          String verificationId,
-          int? resendToken,
-          ) {
-        onCodeSent(
-          verificationId,
-        );
-      },
-
-      codeAutoRetrievalTimeout:
-      onCodeAutoRetrievalTimeout,
-    );
-  }
-
-  // =========================================================
-  // VERIFY OTP
-  // =========================================================
-
-  Future<UserCredential> verifyOTP({
-    required String verificationId,
-    required String smsCode,
-  }) async {
-    final PhoneAuthCredential credential =
-    PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
-    );
-
-    return await _auth.signInWithCredential(
-      credential,
-    );
-  }
-// =========================================================
-// DELETE USER PROFILE
-// =========================================================
-
-  Future<void> deleteUserProfile() async {
-    final User? user = _auth.currentUser;
-
-    if (user == null) {
-      throw Exception('No user is currently logged in.');
-    }
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .delete();
-  }
-
-// =========================================================
-// DELETE FIREBASE ACCOUNT
-// =========================================================
-
-  Future<void> deleteAccount() async {
-    final User? user = _auth.currentUser;
-
-    if (user == null) {
-      throw Exception('No user is currently logged in.');
-    }
-
-    // First delete Firestore data
-    await deleteUserProfile();
-
-    // Then delete Firebase Auth account
-    await user.delete();
-  }
-  // =========================================================
   // LOGOUT
   // =========================================================
 
   Future<void> logout() async {
     try {
-      await _googleSignIn.signOut();
+      await _googleSignInInstance?.signOut();
     } catch (_) {
       // Ignore Google sign-out errors
     }

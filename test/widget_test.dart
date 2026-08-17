@@ -9,6 +9,7 @@ void main() {
         name: 'John Doe',
         email: 'john@example.com',
         phone: '+8801700000000',
+        photoUrl: 'https://example.com/avatar.jpg',
         role: 'user',
       );
 
@@ -18,6 +19,7 @@ void main() {
       expect(map['fullName'], 'John Doe');
       expect(map['email'], 'john@example.com');
       expect(map['phone'], '+8801700000000');
+      expect(map['photoUrl'], 'https://example.com/avatar.jpg');
       expect(map['role'], 'user');
 
       final deserializedUser = UserModel.fromMap(map);
@@ -25,6 +27,7 @@ void main() {
       expect(deserializedUser.name, user.name);
       expect(deserializedUser.email, user.email);
       expect(deserializedUser.phone, user.phone);
+      expect(deserializedUser.photoUrl, user.photoUrl);
       expect(deserializedUser.role, user.role);
     });
 

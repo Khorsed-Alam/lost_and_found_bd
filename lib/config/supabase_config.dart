@@ -24,9 +24,6 @@ class SupabaseConfig {
   // STORAGE FOLDERS
   // ============================================================
 
-  static const String postImagesFolder =
-      'posts';
-
   static const String profileImagesFolder =
       'profiles';
 }
