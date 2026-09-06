@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('Continue with Google'),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 20),// const SizedBox(height: 20),
 
                   Row(
                     mainAxisAlignment:
